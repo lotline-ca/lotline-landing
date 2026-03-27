@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lotline — GTA Planning Application Alerts</title>
+<meta name="description" content="Lotline monitors every GTA municipal planning portal and alerts you when new OPAs, ZBAs, site plans, and Committee of Adjustment applications are filed in your coverage areas.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #0a0f1e;
+    --navy-mid: #111827;
+    --navy-light: #1c2740;
+    --border: rgba(255,255,255,0.08);
+    --amber: #e8a020;
+    --amber-dim: rgba(232,160,32,0.15);
+    --amber-glow: rgba(232,160,32,0.06);
+    --text: #e8e9ed;
+    --text-dim: #8990a8;
+    --text-dimmer: #4a5068;
+    --green: #2ed573;
+    --green-dim: rgba(46,213,115,0.1);
+    --blue: #63b3ed;
+    --blue-dim: rgba(99,179,237,0.1);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--navy);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 48px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,15,30,0.92);
+    backdrop-filter: blur(12px);
+  }
+  .nav-logo {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px; font-weight: 500;
+    color: var(--text); letter-spacing: 0.02em;
+    text-decoration: none;
+  }
+  .nav-logo .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--amber);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+  .nav-cta {
+    padding: 9px 22px; border-radius: 3px;
+    background: var(--amber); color: #0a0f1e;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px; font-weight: 600;
+    text-decoration: none; letter-spacing: 0.03em;
+    transition: opacity 0.2s;
+  }
+  .nav-cta:hover { opacity: 0.85; }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 140px 48px 100px;
+    position: relative; overflow: hidden;
+  }
+  .hero-content-wrap {
+    max-width: 1200px; margin: 0 auto; width: 100%;
+  }
+  .hero-grid {
+    position: absolute; inset: 0; opacity: 0.04;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+  .hero-glow {
+    position: absolute; top: 20%; right: -10%; width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(232,160,32,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    width: 100%; position: relative; z-index: 1;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 60px; align-items: center;
+  }
+  .hero-left { max-width: 580px; }
+  .hero-right { display: flex; flex-direction: column; gap: 12px; }
+  @media (max-width: 900px) {
+    .hero-inner { grid-template-columns: 1fr; }
+    .hero-right { display: none; }
+  }
+  /* Mock alert cards in hero */
+  .alert-card {
+    background: var(--navy-light);
+    border: 1px solid var(--border);
+    border-radius: 6px; padding: 16px 20px;
+    position: relative; overflow: hidden;
+  }
+  .alert-card::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px;
+  }
+  .alert-card.opa::before { background: #63b3ed; }
+  .alert-card.zba::before { background: #9a75f2; }
+  .alert-card.coa::before { background: var(--amber); }
+  .alert-card .ac-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px;
+  }
+  .alert-card .ac-type {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; font-weight: 500; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 2px 8px; border-radius: 2px;
+  }
+  .alert-card.opa .ac-type { background: rgba(99,179,237,0.15); color: #63b3ed; }
+  .alert-card.zba .ac-type { background: rgba(154,117,242,0.15); color: #9a75f2; }
+  .alert-card.coa .ac-type { background: rgba(232,160,32,0.15); color: var(--amber); }
+  .alert-card .ac-time {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; color: var(--text-dimmer);
+  }
+  .alert-card .ac-address {
+    font-size: 14px; font-weight: 600; margin-bottom: 4px; color: var(--text);
+  }
+  .alert-card .ac-desc {
+    font-size: 12px; color: var(--text-dim); line-height: 1.5;
+  }
+  .alert-card .ac-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border);
+  }
+  .alert-card .ac-planner { font-size: 11px; color: var(--text-dimmer); font-family: 'IBM Plex Mono', monospace; }
+  .alert-card .ac-link {
+    font-size: 11px; color: var(--amber);
+    font-family: 'IBM Plex Mono', monospace; text-decoration: none;
+  }
+  .hero-right-label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    color: var(--text-dimmer); letter-spacing: 0.12em; text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; font-weight: 500; letter-spacing: 0.12em;
+    color: var(--amber); text-transform: uppercase;
+    margin-bottom: 32px;
+    padding: 6px 14px; border: 1px solid rgba(232,160,32,0.3);
+    border-radius: 2px; background: var(--amber-glow);
+  }
+  .hero-eyebrow .live { color: var(--green); }
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(44px, 6vw, 78px);
+    font-weight: 900; line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 28px;
+  }
+  h1 em { font-style: italic; color: var(--amber); }
+  .hero-sub {
+    font-size: 18px; color: var(--text-dim);
+    font-weight: 300; line-height: 1.65;
+    max-width: 640px; margin-bottom: 48px;
+  }
+  .hero-form {
+    display: flex; gap: 12px; align-items: center;
+    flex-wrap: wrap; max-width: 520px;
+  }
+  .hero-form input {
+    flex: 1; min-width: 260px;
+    padding: 14px 18px; border-radius: 3px;
+    background: var(--navy-light);
+    border: 1px solid var(--border);
+    color: var(--text); font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 15px; outline: none;
+    transition: border-color 0.2s;
+  }
+  .hero-form input:focus { border-color: rgba(232,160,32,0.5); }
+  .hero-form input::placeholder { color: var(--text-dimmer); }
+  .hero-form button {
+    padding: 14px 28px; border-radius: 3px;
+    background: var(--amber); color: #0a0f1e;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px; font-weight: 600;
+    border: none; cursor: pointer; letter-spacing: 0.03em;
+    transition: opacity 0.2s, transform 0.15s;
+    white-space: nowrap;
+  }
+  .hero-form button:hover { opacity: 0.9; transform: translateY(-1px); }
+  .hero-note {
+    margin-top: 16px; font-size: 12px; color: var(--text-dimmer);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* COMPARE BANNER — new */
+  .compare-banner {
+    background: var(--navy-mid);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 48px;
+    display: flex; align-items: center; justify-content: center;
+    gap: 40px; flex-wrap: wrap;
+  }
+  .compare-item {
+    display: flex; align-items: center; gap: 12px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+  }
+  .compare-item .label { color: var(--text-dimmer); letter-spacing: 0.08em; }
+  .compare-item .value { color: var(--text); font-weight: 500; }
+  .compare-item .value.good { color: var(--green); }
+  .compare-divider { color: var(--text-dimmer); font-size: 20px; }
+
+  /* TICKER */
+  .ticker-wrap {
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: var(--navy-mid);
+    padding: 14px 0; overflow: hidden;
+  }
+  .ticker {
+    display: flex; gap: 48px;
+    animation: ticker 28s linear infinite;
+    white-space: nowrap;
+  }
+  @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .ticker-item {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; letter-spacing: 0.08em;
+    color: var(--text-dim);
+  }
+  .ticker-item .tag {
+    padding: 2px 8px; border-radius: 2px;
+    font-size: 10px; font-weight: 500; letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .tag-opa { background: rgba(99,179,237,0.15); color: #63b3ed; }
+  .tag-zba { background: rgba(154,117,242,0.15); color: #9a75f2; }
+  .tag-sp { background: rgba(72,205,150,0.15); color: #48cd96; }
+  .tag-coa { background: rgba(232,160,32,0.15); color: var(--amber); }
+
+  /* SECTION WRAPPER */
+  section { padding: 100px 48px; }
+  .section-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; font-weight: 500; letter-spacing: 0.14em;
+    color: var(--amber); text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(32px, 4vw, 52px);
+    font-weight: 700; line-height: 1.15;
+    letter-spacing: -0.015em;
+    margin-bottom: 20px;
+  }
+  .lead {
+    font-size: 18px; color: var(--text-dim);
+    font-weight: 300; max-width: 600px; line-height: 1.7;
+    margin-bottom: 60px;
+  }
+
+  /* PROBLEM */
+  .problem { background: var(--navy-mid); }
+  .problem-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 2px; max-width: 900px;
+  }
+  .problem-card { padding: 36px; background: var(--navy); }
+  .problem-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 48px; font-weight: 900; color: var(--text-dimmer);
+    line-height: 1; margin-bottom: 16px;
+  }
+  .problem-card h3 {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 16px; font-weight: 600; margin-bottom: 10px;
+  }
+  .problem-card p { font-size: 14px; color: var(--text-dim); line-height: 1.65; }
+
+  /* HOW IT WORKS */
+  .steps {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border); border-radius: 4px;
+    overflow: hidden;
+  }
+  .step { padding: 48px 40px; background: var(--navy-mid); }
+  .step-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; color: var(--amber); letter-spacing: 0.1em;
+    margin-bottom: 28px; display: block;
+  }
+  .step-icon {
+    width: 44px; height: 44px; border-radius: 4px;
+    background: var(--amber-dim);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; margin-bottom: 24px;
+  }
+  .step h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-weight: 700;
+    margin-bottom: 12px; line-height: 1.2;
+  }
+  .step p { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
+
+  /* VS SECTION — new */
+  .vs-section { background: var(--navy-mid); }
+  .vs-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 2px; max-width: 900px;
+    background: var(--border); border: 1px solid var(--border);
+    border-radius: 4px; overflow: hidden;
+  }
+  .vs-col { background: var(--navy); padding: 40px; }
+  .vs-col.them { background: var(--navy-mid); }
+  .vs-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 28px;
+  }
+  .vs-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; font-weight: 500; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 4px 10px; border-radius: 2px;
+  }
+  .vs-badge.us { background: var(--amber-dim); color: var(--amber); }
+  .vs-badge.them { background: rgba(255,255,255,0.06); color: var(--text-dimmer); }
+  .vs-title {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 15px; font-weight: 600;
+  }
+  .vs-list { list-style: none; }
+  .vs-list li {
+    font-size: 14px; color: var(--text-dim);
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; gap: 10px;
+    line-height: 1.5;
+  }
+  .vs-list li:last-child { border-bottom: none; }
+  .vs-list li .icon { flex-shrink: 0; font-size: 14px; margin-top: 1px; }
+  .vs-note {
+    margin-top: 28px; padding: 16px 20px;
+    background: var(--amber-glow); border: 1px solid rgba(232,160,32,0.2);
+    border-radius: 3px;
+    font-size: 13px; color: var(--text-dim); line-height: 1.6;
+  }
+  .vs-note strong { color: var(--amber); }
+
+  /* COVERAGE */
+  .coverage-section { }
+  .coverage-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 16px; max-width: 900px;
+  }
+  .coverage-card {
+    padding: 28px 32px;
+    border: 1px solid var(--border); border-radius: 4px;
+    background: var(--navy-mid);
+    display: flex; justify-content: space-between; align-items: flex-start;
+  }
+  .coverage-card.coming { opacity: 0.5; border-style: dashed; }
+  .coverage-info h4 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .coverage-info .munis {
+    font-size: 12px; color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .coverage-meta { text-align: right; }
+  .cadence {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px; font-weight: 500;
+    padding: 4px 10px; border-radius: 2px;
+    margin-bottom: 8px; display: inline-block;
+  }
+  .cadence-daily { background: var(--green-dim); color: var(--green); }
+  .cadence-weekly { background: rgba(99,179,237,0.1); color: #63b3ed; }
+  .cadence-monthly { background: rgba(154,117,242,0.1); color: #9a75f2; }
+  .cadence-soon { background: rgba(255,255,255,0.05); color: var(--text-dimmer); }
+  .access-method { font-size: 11px; color: var(--text-dimmer); font-family: 'IBM Plex Mono', monospace; }
+
+  /* ALERT TYPES */
+  .type-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 12px; max-width: 960px;
+  }
+  .type-card {
+    padding: 24px; border-radius: 3px;
+    border: 1px solid var(--border);
+    background: var(--navy-mid);
+  }
+  .type-card .code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; font-weight: 500; letter-spacing: 0.1em;
+    text-transform: uppercase; margin-bottom: 10px; display: block;
+  }
+  .type-card h4 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+  .type-card p { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+
+  /* WHO IS THIS FOR — new */
+  .who-section { background: var(--navy-mid); }
+  .who-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 16px; max-width: 960px;
+  }
+  .who-card {
+    padding: 32px; border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--navy);
+  }
+  .who-card .emoji { font-size: 28px; margin-bottom: 16px; display: block; }
+  .who-card h4 { font-size: 16px; font-weight: 600; margin-bottom: 10px; }
+  .who-card p { font-size: 13px; color: var(--text-dim); line-height: 1.65; }
+  .who-card .use-case {
+    margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--amber);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* PRICING */
+  .pricing-section { }
+  .pricing-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 16px; max-width: 960px;
+  }
+  .plan {
+    padding: 36px; border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--navy-mid);
+    display: flex; flex-direction: column;
+  }
+  .plan.featured {
+    border-color: var(--amber);
+    background: linear-gradient(160deg, rgba(232,160,32,0.06) 0%, var(--navy-mid) 60%);
+  }
+  .plan-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 20px; display: block;
+  }
+  .plan.featured .plan-label { color: var(--amber); }
+  .plan-price {
+    font-family: 'Playfair Display', serif;
+    font-size: 42px; font-weight: 900; line-height: 1;
+    margin-bottom: 4px;
+  }
+  .plan-period { font-size: 13px; color: var(--text-dim); margin-bottom: 28px; }
+  .plan-features { list-style: none; flex: 1; margin-bottom: 28px; }
+  .plan-features li {
+    font-size: 13px; color: var(--text-dim);
+    padding: 8px 0; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .plan-features li::before { content: "—"; color: var(--amber); flex-shrink: 0; }
+  .plan-btn {
+    display: block; text-align: center;
+    padding: 12px; border-radius: 3px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px; font-weight: 600; letter-spacing: 0.03em;
+    text-decoration: none; cursor: pointer; border: none;
+    transition: opacity 0.2s;
+  }
+  .plan-btn-outline { border: 1px solid var(--border); color: var(--text); background: transparent; }
+  .plan-btn-outline:hover { border-color: rgba(255,255,255,0.25); }
+  .plan-btn-amber { background: var(--amber); color: #0a0f1e; }
+  .plan-btn-amber:hover { opacity: 0.88; }
+  /* Pricing context note */
+  .pricing-context {
+    max-width: 960px; margin-top: 20px;
+    padding: 16px 20px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border); border-radius: 3px;
+    font-size: 13px; color: var(--text-dimmer);
+    font-family: 'IBM Plex Mono', monospace;
+    line-height: 1.6;
+  }
+  .pricing-context span { color: var(--green); }
+
+  /* FAQ */
+  .faq-list { display: flex; flex-direction: column; gap: 2px; max-width: 800px; }
+  .faq-item { background: var(--navy-mid); border-radius: 3px; overflow: hidden; }
+  .faq-q {
+    width: 100%; text-align: left;
+    padding: 22px 28px; font-size: 15px; font-weight: 500;
+    color: var(--text); background: none; border: none;
+    cursor: pointer; display: flex; justify-content: space-between;
+    align-items: center; gap: 20px;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .faq-q .arrow { color: var(--text-dim); transition: transform 0.2s; flex-shrink: 0; }
+  .faq-item.open .arrow { transform: rotate(45deg); }
+  .faq-a {
+    padding: 0 28px; max-height: 0; overflow: hidden;
+    transition: max-height 0.35s ease, padding 0.3s ease;
+    font-size: 14px; color: var(--text-dim); line-height: 1.75;
+  }
+  .faq-item.open .faq-a { max-height: 400px; padding: 0 28px 22px; }
+  .faq-highlight {
+    display: inline-block;
+    background: var(--amber-dim); color: var(--amber);
+    padding: 1px 6px; border-radius: 2px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+  }
+
+  /* FINAL CTA */
+  .final-cta {
+    text-align: center; padding: 120px 48px;
+    background: var(--navy-mid);
+    border-top: 1px solid var(--border);
+  }
+  .final-cta h2 { margin: 0 auto 16px; max-width: 700px; }
+  .final-cta .lead { margin: 0 auto 40px; }
+  .cta-form {
+    display: flex; gap: 12px; align-items: center;
+    justify-content: center; flex-wrap: wrap;
+  }
+  .cta-form input {
+    width: 300px; padding: 14px 18px; border-radius: 3px;
+    background: var(--navy-light); border: 1px solid var(--border);
+    color: var(--text); font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 15px; outline: none; transition: border-color 0.2s;
+  }
+  .cta-form input:focus { border-color: rgba(232,160,32,0.5); }
+  .cta-form input::placeholder { color: var(--text-dimmer); }
+  .cta-form button {
+    padding: 14px 32px; border-radius: 3px;
+    background: var(--amber); color: #0a0f1e;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px; font-weight: 600; border: none; cursor: pointer;
+    letter-spacing: 0.03em; transition: opacity 0.2s;
+  }
+  .cta-form button:hover { opacity: 0.88; }
+  .cta-note { margin-top: 14px; font-size: 12px; color: var(--text-dimmer); font-family: 'IBM Plex Mono', monospace; }
+
+  /* FOOTER */
+  footer {
+    padding: 32px 48px; border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; color: var(--text-dimmer);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* ANIMATIONS */
+  .fade-up {
+    opacity: 0; transform: translateY(24px);
+    animation: fadeUp 0.7s ease forwards;
+  }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .fade-up:nth-child(1) { animation-delay: 0.1s; }
+  .fade-up:nth-child(2) { animation-delay: 0.2s; }
+  .fade-up:nth-child(3) { animation-delay: 0.35s; }
+  .fade-up:nth-child(4) { animation-delay: 0.5s; }
+  .fade-up:nth-child(5) { animation-delay: 0.65s; }
+
+  /* DIVIDER */
+  .divider {
+    border: none; border-top: 1px solid var(--border); margin: 0;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    nav { padding: 16px 24px; }
+    .hero, section { padding-left: 24px; padding-right: 24px; }
+    .problem-grid, .steps, .type-grid, .pricing-grid,
+    .coverage-grid, .vs-grid, .who-grid { grid-template-columns: 1fr; }
+    .compare-banner { padding: 16px 24px; gap: 16px; flex-direction: column; text-align: center; }
+    footer { flex-direction: column; gap: 8px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <span class="dot"></span>
+    LOTLINE
+  </a>
+  <a href="#signup" class="nav-cta">Join Beta →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-content-wrap">
+  <div class="hero-inner">
+    <div class="hero-left">
+    <div class="hero-eyebrow fade-up">
+      <span class="live">●</span>&nbsp;Live data &nbsp;·&nbsp; GTA-wide coverage
+    </div>
+    <h1 class="fade-up">
+      The application filed<br>
+      <em>six weeks ago.</em><br>
+      You found out today.
+    </h1>
+    <p class="hero-sub fade-up">
+      Lotline watches every municipal planning portal so you don't have to. When a new OPA, ZBA, site plan, or Committee of Adjustment application lands in your area — you get an email before anyone else is looking.
+    </p>
+    <div class="hero-form fade-up" id="signup">
+      <input type="email" placeholder="your@email.com" id="hero-email" />
+      <button onclick="handleSignup('hero-email')">Get Early Access</button>
+    </div>
+    <p class="hero-note fade-up">Free during beta. No credit card. Toronto-first at launch.</p>
+    <p class="hero-note fade-up" style="margin-top:10px;color:var(--text-dim);">
+      <span style="color:var(--green);">●</span>&nbsp; <span id="waitlist-count">—</span> people on the waitlist
+    </p>
+    </div>
+    <div class="hero-right">
+      <p class="hero-right-label">↓ Latest alerts in your inbox</p>
+      <div class="alert-card zba">
+        <div class="ac-header">
+          <span class="ac-type">ZBA</span>
+          <span class="ac-time">2 hours ago</span>
+        </div>
+        <div class="ac-address">1265 Military Trail, Scarborough</div>
+        <div class="ac-desc">Rezoning to permit a 12-storey mixed-use residential building with ground floor commercial uses.</div>
+        <div class="ac-footer">
+          <span class="ac-planner">Planner: M. Chen · 416-395-7294</span>
+          <a class="ac-link" href="#">View →</a>
+        </div>
+      </div>
+      <div class="alert-card opa">
+        <div class="ac-header">
+          <span class="ac-type">OPA</span>
+          <span class="ac-time">Yesterday</span>
+        </div>
+        <div class="ac-address">480 University Ave, Toronto</div>
+        <div class="ac-desc">Official Plan Amendment to redesignate lands from Mixed Use to Regeneration Areas to permit increased density.</div>
+        <div class="ac-footer">
+          <span class="ac-planner">Planner: R. Patel · 416-392-0881</span>
+          <a class="ac-link" href="#">View →</a>
+        </div>
+      </div>
+      <div class="alert-card coa">
+        <div class="ac-header">
+          <span class="ac-type">C of A</span>
+          <span class="ac-time">2 days ago</span>
+        </div>
+        <div class="ac-address">34 Applewood Ave, Etobicoke</div>
+        <div class="ac-desc">Minor variance for increased lot coverage and reduced side yard setback to permit a rear addition.</div>
+        <div class="ac-footer">
+          <span class="ac-planner">Hearing: Jun 12, 2026</span>
+          <a class="ac-link" href="#">View →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+</section>
+
+<!-- COMPARE BANNER -->
+<div class="compare-banner">
+<div style="max-width:1100px;margin:0 auto;width:100%;display:flex;align-items:center;justify-content:center;gap:40px;flex-wrap:wrap;">
+  <div class="compare-item">
+    <span class="label">PER-REPORT RESEARCH TOOLS</span>
+    <span class="value">$199+ / report</span>
+  </div>
+  <div class="compare-divider">·</div>
+  <div class="compare-item">
+    <span class="label">LOTLINE</span>
+    <span class="value good">$149 / month — unlimited alerts</span>
+  </div>
+  <div class="compare-divider">·</div>
+  <div class="compare-item">
+    <span class="label">MANUAL PORTAL CHECKING</span>
+    <span class="value">Your time, every day</span>
+  </div>
+  </div>
+</div>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker">
+    <span class="ticker-item"><span class="tag tag-zba">ZBA</span> 1265 Military Trail — Toronto · Submitted 3 days ago</span>
+    <span class="ticker-item"><span class="tag tag-opa">OPA</span> 7140 Hurontario St — Mississauga · Under Review</span>
+    <span class="ticker-item"><span class="tag tag-sp">SITE PLAN</span> 77 Eagleview Heights — Vaughan · In Progress</span>
+    <span class="ticker-item"><span class="tag tag-coa">C of A</span> 34 Applewood Ave — Etobicoke · Hearing Jun 12</span>
+    <span class="ticker-item"><span class="tag tag-zba">ZBA</span> 3033 Dundas St W — Mississauga · Public Meeting Scheduled</span>
+    <span class="ticker-item"><span class="tag tag-opa">OPA</span> Block 62 West — Vaughan · Awaiting Approval</span>
+    <span class="ticker-item"><span class="tag tag-sp">SITE PLAN</span> 2719 Stone Ridge Rd — Vaughan · Finalization Stage</span>
+    <span class="ticker-item"><span class="tag tag-coa">C of A</span> 893 Seventh St — Mississauga · Submitted 5 days ago</span>
+    <span class="ticker-item"><span class="tag tag-zba">ZBA</span> 1265 Military Trail — Toronto · Submitted 3 days ago</span>
+    <span class="ticker-item"><span class="tag tag-opa">OPA</span> 7140 Hurontario St — Mississauga · Under Review</span>
+    <span class="ticker-item"><span class="tag tag-sp">SITE PLAN</span> 77 Eagleview Heights — Vaughan · In Progress</span>
+    <span class="ticker-item"><span class="tag tag-coa">C of A</span> 34 Applewood Ave — Etobicoke · Hearing Jun 12</span>
+    <span class="ticker-item"><span class="tag tag-zba">ZBA</span> 3033 Dundas St W — Mississauga · Public Meeting Scheduled</span>
+    <span class="ticker-item"><span class="tag tag-opa">OPA</span> Block 62 West — Vaughan · Awaiting Approval</span>
+    <span class="ticker-item"><span class="tag tag-sp">SITE PLAN</span> 2719 Stone Ridge Rd — Vaughan · Finalization Stage</span>
+    <span class="ticker-item"><span class="tag tag-coa">C of A</span> 893 Seventh St — Mississauga · Submitted 5 days ago</span>
+  </div>
+</div>
+
+<!-- PROBLEM -->
+<section class="problem">
+<div class="section-inner">
+  <div class="section-label">The Problem</div>
+  <h2>The data is public.<br>Nobody's watching it.</h2>
+  <p class="lead">Every GTA municipality publishes its planning applications. But the portals are slow, inconsistent, and spread across ten different systems. Nobody checks all of them, every day — which means whoever does has an edge.</p>
+  <div class="problem-grid">
+    <div class="problem-card">
+      <div class="problem-num">01</div>
+      <h3>You find out late</h3>
+      <p>By the time a rezoning surfaces in a broker email or industry newsletter, the filing was weeks ago. The window was open — you just didn't know it.</p>
+    </div>
+    <div class="problem-card">
+      <div class="problem-num">02</div>
+      <h3>Manual checking doesn't scale</h3>
+      <p>Toronto's AIC, York Region's dashboard, Mississauga's ePlans — each with different search logic, different update schedules, different formats. Monitoring all of them is a part-time job.</p>
+    </div>
+    <div class="problem-card">
+      <div class="problem-num">03</div>
+      <h3>Context disappears between projects</h3>
+      <p>You track an area intensely while active in it, then move on. Six months later, a site you dismissed has a new OPA and a motivated vendor. You're the last to know.</p>
+    </div>
+    <div class="problem-card">
+      <div class="problem-num">04</div>
+      <h3>Committee of Adjustment goes unread</h3>
+      <p>Minor variances reveal early intensification intent before the market prices it in. These are consistently the most undermonitored signal in the GTA — and the most actionable.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section>
+  <div style="max-width:1100px;margin:0 auto">
+    <div class="section-label">How It Works</div>
+    <h2>Set it once.<br>Know first, always.</h2>
+    <p class="lead">No portals to check. No spreadsheets to update. Define what you're watching — we tell you the moment something new files.</p>
+    <div class="steps">
+      <div class="step">
+        <span class="step-num">STEP 01</span>
+        <div class="step-icon">🗺</div>
+        <h3>Define your coverage zones</h3>
+        <p>Draw polygons on a map, select wards, or set a radius around an address. Save multiple zones — track Midtown Toronto and North Vaughan separately, each with its own alert preferences.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">STEP 02</span>
+        <div class="step-icon">⚙️</div>
+        <h3>Choose your filters</h3>
+        <p>Filter by application type — OPA, ZBA, site plan, subdivision, Committee of Adjustment. Filter by status. Daily digest or immediate alert the moment something files — your call.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">STEP 03</span>
+        <div class="step-icon">📬</div>
+        <h3>Get it in your inbox</h3>
+        <p>Address, application type, description, submission date, assigned city planner's name and contact, and a direct link to the source document. Everything in one email. You decide in 10 seconds whether to act.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VS SECTION -->
+<section class="vs-section">
+<div class="section-inner">
+  <div class="section-label">How We Fit In</div>
+  <h2>An alert layer,<br>not a database.</h2>
+  <p class="lead">Tools like UTPro are excellent for researching projects you already know about. We solve a different problem: making sure you know about them in the first place.</p>
+  <div class="vs-grid">
+    <div class="vs-col">
+      <div class="vs-header">
+        <span class="vs-badge us">Lotline</span>
+      </div>
+      <ul class="vs-list">
+        <li><span class="icon">✓</span> Passive — comes to you, no login required</li>
+        <li><span class="icon">✓</span> Configured once, runs forever</li>
+        <li><span class="icon">✓</span> Covers Toronto, York Region, Mississauga in one feed</li>
+        <li><span class="icon">✓</span> Includes Committee of Adjustment (often missed)</li>
+        <li><span class="icon">✓</span> Flat monthly price — unlimited alerts</li>
+        <li><span class="icon">✓</span> Tells you what just filed in your area</li>
+      </ul>
+    </div>
+    <div class="vs-col them">
+      <div class="vs-header">
+        <span class="vs-badge them">Per-Report Research Databases</span>
+      </div>
+      <ul class="vs-list">
+        <li><span class="icon" style="color:var(--text-dimmer)">→</span> Active — you search when you remember to</li>
+        <li><span class="icon" style="color:var(--text-dimmer)">→</span> Requires regular manual queries</li>
+        <li><span class="icon" style="color:var(--text-dimmer)">→</span> Deep data on projects already in their database</li>
+        <li><span class="icon" style="color:var(--text-dimmer)">→</span> Focused on tracking known projects in detail</li>
+        <li><span class="icon" style="color:var(--text-dimmer)">→</span> Per-report pricing ($199+) or enterprise subscription</li>
+        <li><span class="icon" style="color:var(--text-dimmer)">→</span> Excellent for due diligence once you know what to look at</li>
+      </ul>
+    </div>
+  </div>
+  <div class="vs-note" style="max-width:900px;margin-top:16px;">
+    <strong>Most of our users use both.</strong> A monitoring tool tells you what just filed. A research database tells you everything about a project you're already tracking. They're not competing for the same job.
+  </div>
+</div>
+</section>
+
+<!-- WHO IS THIS FOR -->
+<section class="who-section">
+<div class="section-inner">
+  <div class="section-label">Who It's For</div>
+  <h2>Three types of people<br>who should be using this.</h2>
+  <p class="lead" style="margin-bottom:40px">If you have geographic skin in the game in the GTA, you should be watching what's being filed.</p>
+  <div class="who-grid">
+    <div class="who-card">
+      <span class="emoji">🏗</span>
+      <h4>Small developers & land investors</h4>
+      <p>You're actively sourcing sites or tracking neighbourhoods. You need to know about rezoning signals and OPA filings before the land comes to market and the price adjusts.</p>
+      <div class="use-case">→ Set alerts for OPA + ZBA in target geographies</div>
+    </div>
+    <div class="who-card">
+      <span class="emoji">📐</span>
+      <h4>Architects & planning consultants</h4>
+      <p>You have active files across multiple clients and need to track adjacent applications, neighbourhood changes, and precedent-setting decisions near your projects.</p>
+      <div class="use-case">→ Zone alerts around each active project address</div>
+    </div>
+    <div class="who-card">
+      <span class="emoji">🤝</span>
+      <h4>Commercial brokers & advisors</h4>
+      <p>Development activity is the clearest leading indicator for your market. Knowing what's filing — and when — shapes your advice and your prospecting before listings appear.</p>
+      <div class="use-case">→ Watch specific corridors + C of A for density signals</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing-section">
+<div class="section-inner">
+  <div class="section-label">Pricing</div>
+  <h2>Simple pricing.<br>One actionable alert pays for months.</h2>
+  <p class="lead">One early filing in the right area is worth far more than a year's subscription. Priced to make that obvious.</p>
+  <div class="pricing-grid">
+    <div class="plan">
+      <span class="plan-label">Starter</span>
+      <div class="plan-price">$149</div>
+      <div class="plan-period">per month · billed monthly</div>
+      <ul class="plan-features">
+        <li>1 municipality</li>
+        <li>3 alert zones</li>
+        <li>Daily email digest</li>
+        <li>All application types</li>
+        <li>90-day alert history</li>
+      </ul>
+      <button class="plan-btn plan-btn-outline" onclick="document.querySelector('#signup input').focus()">Get Started →</button>
+    </div>
+    <div class="plan featured">
+      <span class="plan-label">Professional ★ Most Popular</span>
+      <div class="plan-price">$299</div>
+      <div class="plan-period">per month · billed monthly</div>
+      <ul class="plan-features">
+        <li>3 municipalities</li>
+        <li>10 alert zones</li>
+        <li>Immediate + daily alerts</li>
+        <li>All application types</li>
+        <li>Full history + CSV export</li>
+        <li>Status change notifications</li>
+      </ul>
+      <button class="plan-btn plan-btn-amber" onclick="document.querySelector('#signup input').focus()">Get Started →</button>
+    </div>
+    <div class="plan">
+      <span class="plan-label">Team</span>
+      <div class="plan-price">$499</div>
+      <div class="plan-period">per month · billed monthly</div>
+      <ul class="plan-features">
+        <li>All municipalities</li>
+        <li>Unlimited zones</li>
+        <li>5 seats included</li>
+        <li>Weekly briefing report</li>
+        <li>Full history + CSV export</li>
+        <li>Priority support</li>
+      </ul>
+      <button class="plan-btn plan-btn-outline" onclick="document.querySelector('#signup input').focus()">Get Started →</button>
+    </div>
+  </div>
+  <div class="pricing-context">
+    For context: per-report research tools start at $199 per pull. Our Starter plan is $149/month for <span>unlimited alerts</span> across an entire municipality.
+    Annual billing saves 2 months. Beta users receive 50% off their first year.
+  </div>
+  </div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section>
+<div class="section-inner">
+
+<!-- COVERAGE -->
+<div style="margin-bottom:80px;">
+  <div class="section-label">Data Coverage</div>
+  <h2>Four municipalities.<br>One feed. All public data.</h2>
+  <p class="lead">Built directly on municipal APIs and ArcGIS endpoints — not third-party aggregators. The same data that appears on city portals, normalized and routed to you.</p>
+  <div class="coverage-grid">
+    <div class="coverage-card">
+      <div class="coverage-info">
+        <h4>Toronto</h4>
+        <div class="munis">All 25 wards · Community Planning · C of A · TLAB</div>
+      </div>
+      <div class="coverage-meta">
+        <div class="cadence cadence-daily">Daily</div>
+        <div class="access-method">CKAN REST API</div>
+      </div>
+    </div>
+    <div class="coverage-card">
+      <div class="coverage-info">
+        <h4>York Region</h4>
+        <div class="munis">Markham · Vaughan · Richmond Hill · Aurora · Newmarket</div>
+      </div>
+      <div class="coverage-meta">
+        <div class="cadence cadence-weekly">Weekly</div>
+        <div class="access-method">ArcGIS FeatureServer</div>
+      </div>
+    </div>
+    <div class="coverage-card">
+      <div class="coverage-info">
+        <h4>Mississauga</h4>
+        <div class="munis">All 11 wards · OPA · Rezoning · Subdivision</div>
+      </div>
+      <div class="coverage-meta">
+        <div class="cadence cadence-monthly">Monthly+</div>
+        <div class="access-method">ArcGIS Hub + Live Page</div>
+      </div>
+    </div>
+    <div class="coverage-card coming">
+      <div class="coverage-info">
+        <h4>Brampton</h4>
+        <div class="munis">Coming soon — integration in progress</div>
+      </div>
+      <div class="coverage-meta">
+        <div class="cadence cadence-soon">Q3 2026</div>
+        <div class="access-method">GeoHub / O. Reg. 73/23</div>
+      </div>
+    </div>
+  </div>
+  <p style="margin-top:16px;font-size:12px;color:var(--text-dimmer);font-family:'IBM Plex Mono',monospace;">
+    Ontario Regulation 73/23 legally requires all 29 major municipalities to publish standardized planning data publicly on a quarterly basis.
+  </p>
+</div>
+
+<!-- ALERT TYPES -->
+<div style="margin-bottom:80px;">
+  <div class="section-label">What We Track</div>
+  <h2>Every application type<br>that matters.</h2>
+  <p class="lead" style="margin-bottom:40px">Not sure what the codes mean? Here's what each type signals in plain English — and why it matters to you.</p>
+  <div class="type-grid">
+    <div class="type-card">
+      <span class="code" style="color:#63b3ed">OPA</span>
+      <h4>Official Plan Amendment</h4>
+      <p>A landowner is telling the city they want to change what a site is allowed to be. Filed years before rezoning — the earliest signal a site is being assembled for development.</p>
+    </div>
+    <div class="type-card">
+      <span class="code" style="color:#9a75f2">ZBA</span>
+      <h4>Zoning By-law Amendment</h4>
+      <p>The project is getting specific: proposed height, density, and use. This is the core pipeline filing — by the time it's public, the developer has committed to a direction.</p>
+    </div>
+    <div class="type-card">
+      <span class="code" style="color:#48cd96">SITE PLAN</span>
+      <h4>Site Plan Control</h4>
+      <p>Massing, access, and unit count are now on paper. Often filed with a ZBA. Confirms the project is real and moving — not just a speculative application.</p>
+    </div>
+    <div class="type-card">
+      <span class="code" style="color:var(--amber)">C OF A</span>
+      <h4>Committee of Adjustment</h4>
+      <p>A minor variance — a small deviation from existing zoning rules. These reveal early intensification intent on individual properties. Consistently the most undermonitored signal.</p>
+    </div>
+    <div class="type-card">
+      <span class="code" style="color:#fc8181">SUBP</span>
+      <h4>Plan of Subdivision</h4>
+      <p>Large-scale land assembly and lot creation. Greenfield or brownfield. The earliest signal for major new development outside the existing urban fabric.</p>
+    </div>
+    <div class="type-card">
+      <span class="code" style="color:#a0c4ff">CDMP</span>
+      <h4>Draft Plan of Condominium</h4>
+      <p>A built or near-complete project is converting to condo tenure. Signals exit timing for the developer — useful for tracking when supply is about to hit the market.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section-label">Common Questions</div>
+  <h2 style="margin-bottom:40px">Before you ask.</h2>
+  <div class="faq-list">
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        I already use a planning research database. Why would I need this too?
+        <span class="arrow">+</span>
+      </button>
+      <div class="faq-a">Per-report research databases are excellent for investigating a project you already know about — deep data, historical records, full project lifecycle. We solve a different problem: making sure you know about filings in the first place. Most of our users use both approaches: a research tool for due diligence on projects they're tracking, and us to discover what's being filed in their areas before they'd think to search. They're not competing for the same job. If you're an active subscriber to a planning research database, ask yourself: <em>how often do I discover new filings from their alert feature vs. going in to search manually?</em> If the answer is rarely, that's the gap we fill.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        How is this different from checking the AIC myself?
+        <span class="arrow">+</span>
+      </button>
+      <div class="faq-a">The AIC covers Toronto only, has no alert capability, and requires you to remember to check it. We cover the whole GTA across three portal systems, run automatically every day, and push an alert to your inbox when something new lands in your coverage area — without you opening a single portal. We also normalize data across municipalities so your monitoring is consistent whether an application is in Markham or Mississauga.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        Where does the data come from? Is it accurate?
+        <span class="arrow">+</span>
+      </button>
+      <div class="faq-a">We pull directly from the source: Toronto's CKAN open data API (refreshed daily), York Region's ArcGIS FeatureServer (weekly), and Mississauga's planning portals. No third-party aggregation, no middlemen. The underlying data is published by city planning staff — the same data that appears on their public portals. Ontario Regulation 73/23 legally requires all major municipalities to publish this data quarterly at minimum.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        What does an alert actually look like?
+        <span class="arrow">+</span>
+      </button>
+      <div class="faq-a">A short, plain email: the property address, application type (OPA / ZBA / Site Plan / C of A), a brief description of what's proposed, the submission date, the assigned city planner's name and contact information, and a direct link to the application on the source portal. One paragraph — you decide in ten seconds whether to act on it.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        Does this include Committee of Adjustment decisions?
+        <span class="arrow">+</span>
+      </button>
+      <div class="faq-a">Yes. C of A applications are included for Toronto (minor variances and consent applications) and York Region. They're often the most undermonitored signal — they surface incremental intensification and early-stage site intentions well before any formal rezoning is filed.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        What happens during beta?
+        <span class="arrow">+</span>
+      </button>
+      <div class="faq-a">Beta is free. We start with Toronto (our cleanest, daily-refreshed data source), with York Region and Mississauga following within 6–8 weeks. In exchange we ask for direct feedback — a short reply when you get your first alert telling us whether it was relevant. That feedback shapes what we build next. Beta users get 50% off their first paid year, and you'll hear from me personally before any billing starts.</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-cta" id="cta">
+<div class="section-inner">
+  <div class="section-label">Early Access</div>
+  <h2>Stop checking portals.<br>Start knowing first.</h2>
+  <p class="lead">Free beta. Toronto-first. I'll email you personally before your account goes live.</p>
+  <div class="cta-form">
+    <input type="email" placeholder="your@email.com" id="cta-email" />
+    <button onclick="handleSignup('cta-email')">Request Beta Access</button>
+  </div>
+  <p class="cta-note">No spam. No credit card. Unsubscribe any time.</p>
+</div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+<div style="max-width:1100px;margin:0 auto;width:100%;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+  <span>Lotline &nbsp;·&nbsp; Toronto, Ontario</span>
+  <span>Data: Toronto Open Data · York Region · City of Mississauga · O. Reg. 73/23</span>
+</div>
+</footer>
+
+<script>
+  function toggleFaq(btn) {
+    const item = btn.closest('.faq-item');
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+
+  // Waitlist counter — replace with real API call once you have a backend
+  // e.g. fetch('/api/waitlist-count').then(r => r.json()).then(d => updateCount(d.count))
+  function updateCount(n) {
+    const el = document.getElementById('waitlist-count');
+    if (el && n > 0) el.textContent = n.toLocaleString();
+    else if (el) el.closest('p').style.display = 'none';
+  }
+  // During beta: set this manually or wire to your email capture backend
+  const WAITLIST_COUNT = 0; // set to real number once signups start
+  if (WAITLIST_COUNT > 0) updateCount(WAITLIST_COUNT);
+  else document.getElementById('waitlist-count')?.closest('p')?.style.setProperty('display','none');
+
+  function handleSignup(inputId) {
+    const input = document.getElementById(inputId);
+    const email = input.value.trim();
+    if (!email || !email.includes('@')) {
+      input.style.borderColor = 'rgba(252,129,129,0.6)';
+      setTimeout(() => input.style.borderColor = '', 1200);
+      return;
+    }
+    const btn = input.nextElementSibling;
+    btn.textContent = '✓ You\'re on the list';
+    btn.style.background = 'var(--green)';
+    btn.disabled = true;
+    input.disabled = true;
+    console.log('Signup:', email);
+  }
+
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.08 });
+
+  document.querySelectorAll(
+    '.problem-card, .step, .plan, .type-card, .coverage-card, .who-card, .vs-col'
+  ).forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    observer.observe(el);
+  });
+</script>
+</body>
+</html>
