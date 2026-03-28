@@ -1080,7 +1080,7 @@
   if (WAITLIST_COUNT > 0) updateCount(WAITLIST_COUNT);
   else document.getElementById('waitlist-count')?.closest('p')?.style.setProperty('display','none');
 
-  function handleSignup(inputId) {
+  async function handleSignup(inputId) {
     const input = document.getElementById(inputId);
     const email = input.value.trim();
     if (!email || !email.includes('@')) {
@@ -1089,11 +1089,29 @@
       return;
     }
     const btn = input.nextElementSibling;
-    btn.textContent = '✓ You\'re on the list';
-    btn.style.background = 'var(--green)';
+    btn.textContent = 'Adding you...';
     btn.disabled = true;
     input.disabled = true;
-    console.log('Signup:', email);
+
+    try {
+      const res = await fetch('https://lotline-subscribe.destiny510.workers.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email_address: email })
+      });
+      if (res.ok) {
+        btn.textContent = '✓ You\'re on the list';
+        btn.style.background = 'var(--green)';
+      } else {
+        throw new Error('Error ' + res.status);
+      }
+    } catch {
+      btn.textContent = 'Try again';
+      btn.disabled = false;
+      input.disabled = false;
+      input.style.borderColor = 'rgba(252,129,129,0.6)';
+      setTimeout(() => input.style.borderColor = '', 1500);
+    }
   }
 
   // Scroll reveal
