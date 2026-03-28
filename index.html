@@ -604,7 +604,7 @@
   <div class="hero-inner">
     <div class="hero-left">
     <div class="hero-eyebrow fade-up">
-      <span class="live">●</span>&nbsp;Live data &nbsp;·&nbsp; GTA-wide coverage
+      <span class="live">●</span>&nbsp;Live data &nbsp;·&nbsp; Toronto + York Region
     </div>
     <h1 class="fade-up">
       The application filed<br>
@@ -618,7 +618,7 @@
       <input type="email" placeholder="your@email.com" id="hero-email" />
       <button onclick="handleSignup('hero-email')">Get Early Access</button>
     </div>
-    <p class="hero-note fade-up">Free during beta. No credit card. Toronto-first at launch.</p>
+    <p class="hero-note fade-up">Free during beta. No credit card. Covering Toronto + York Region.</p>
     <p class="hero-note fade-up" style="margin-top:10px;color:var(--text-dim);">
       <span style="color:var(--green);">●</span>&nbsp; <span id="waitlist-count">—</span> people on the waitlist
     </p>
@@ -676,7 +676,7 @@
   <div class="compare-divider">·</div>
   <div class="compare-item">
     <span class="label">LOTLINE</span>
-    <span class="value good">$149 / month — unlimited alerts</span>
+    <span class="value good">Flat monthly — unlimited alerts</span>
   </div>
   <div class="compare-divider">·</div>
   <div class="compare-item">
@@ -750,7 +750,7 @@
         <span class="step-num">STEP 01</span>
         <div class="step-icon">🗺</div>
         <h3>Define your coverage zones</h3>
-        <p>Draw polygons on a map, select wards, or set a radius around an address. Save multiple zones — track Midtown Toronto and North Vaughan separately, each with its own alert preferences.</p>
+        <p>Select the Toronto wards and York Region municipalities you want to monitor. Track multiple areas separately, each with its own alert preferences. Map-based zone drawing coming soon.</p>
       </div>
       <div class="step">
         <span class="step-num">STEP 02</span>
@@ -837,60 +837,13 @@
 </div>
 </section>
 
-<!-- PRICING -->
-<section class="pricing-section">
-<div class="section-inner">
-  <div class="section-label">Pricing</div>
-  <h2>Simple pricing.<br>One actionable alert pays for months.</h2>
-  <p class="lead">One early filing in the right area is worth far more than a year's subscription. Priced to make that obvious.</p>
-  <div class="pricing-grid">
-    <div class="plan">
-      <span class="plan-label">Starter</span>
-      <div class="plan-price">$149</div>
-      <div class="plan-period">per month · billed monthly</div>
-      <ul class="plan-features">
-        <li>1 municipality</li>
-        <li>3 alert zones</li>
-        <li>Daily email digest</li>
-        <li>All application types</li>
-        <li>90-day alert history</li>
-      </ul>
-      <button class="plan-btn plan-btn-outline" onclick="document.querySelector('#signup input').focus()">Get Started →</button>
-    </div>
-    <div class="plan featured">
-      <span class="plan-label">Professional ★ Most Popular</span>
-      <div class="plan-price">$299</div>
-      <div class="plan-period">per month · billed monthly</div>
-      <ul class="plan-features">
-        <li>3 municipalities</li>
-        <li>10 alert zones</li>
-        <li>Immediate + daily alerts</li>
-        <li>All application types</li>
-        <li>Full history + CSV export</li>
-        <li>Status change notifications</li>
-      </ul>
-      <button class="plan-btn plan-btn-amber" onclick="document.querySelector('#signup input').focus()">Get Started →</button>
-    </div>
-    <div class="plan">
-      <span class="plan-label">Team</span>
-      <div class="plan-price">$499</div>
-      <div class="plan-period">per month · billed monthly</div>
-      <ul class="plan-features">
-        <li>All municipalities</li>
-        <li>Unlimited zones</li>
-        <li>5 seats included</li>
-        <li>Weekly briefing report</li>
-        <li>Full history + CSV export</li>
-        <li>Priority support</li>
-      </ul>
-      <button class="plan-btn plan-btn-outline" onclick="document.querySelector('#signup input').focus()">Get Started →</button>
-    </div>
-  </div>
-  <div class="pricing-context">
-    For context: per-report research tools start at $199 per pull. Our Starter plan is $149/month for <span>unlimited alerts</span> across an entire municipality.
-    Annual billing saves 2 months. Beta users receive 50% off their first year.
-  </div>
-  </div>
+<!-- BETA ACCESS -->
+<section>
+<div class="section-inner" style="text-align:center;max-width:680px;">
+  <div class="section-label">Beta</div>
+  <h2>Free during beta.<br>We'll announce pricing before launch.</h2>
+  <p class="lead" style="margin:0 auto 40px;">We're looking for a handful of development professionals to use Lotline and tell us whether the alerts are actually useful. Full access, no credit card, no commitment. Beta users get a permanent discount when paid plans launch.</p>
+  <button class="plan-btn plan-btn-amber" style="max-width:320px;margin:0 auto;" onclick="document.querySelector('#signup input').focus()">Join the Beta →</button>
 </div>
 </section>
 
@@ -901,7 +854,7 @@
 <!-- COVERAGE -->
 <div style="margin-bottom:80px;">
   <div class="section-label">Data Coverage</div>
-  <h2>Four municipalities.<br>One feed. All public data.</h2>
+  <h2>Toronto + all of York Region.<br>More coming.</h2>
   <p class="lead">Built directly on municipal APIs and ArcGIS endpoints — not third-party aggregators. The same data that appears on city portals, normalized and routed to you.</p>
   <div class="coverage-grid">
     <div class="coverage-card">
@@ -917,20 +870,20 @@
     <div class="coverage-card">
       <div class="coverage-info">
         <h4>York Region</h4>
-        <div class="munis">Markham · Vaughan · Richmond Hill · Aurora · Newmarket</div>
+        <div class="munis">Markham · Vaughan · Richmond Hill · Aurora · Newmarket · King · East Gwillimbury · Georgina · Whitchurch-Stouffville</div>
       </div>
       <div class="coverage-meta">
         <div class="cadence cadence-weekly">Weekly</div>
         <div class="access-method">ArcGIS FeatureServer</div>
       </div>
     </div>
-    <div class="coverage-card">
+    <div class="coverage-card coming">
       <div class="coverage-info">
         <h4>Mississauga</h4>
-        <div class="munis">All 11 wards · OPA · Rezoning · Subdivision</div>
+        <div class="munis">Coming soon — all 11 wards</div>
       </div>
       <div class="coverage-meta">
-        <div class="cadence cadence-monthly">Monthly+</div>
+        <div class="cadence cadence-soon">Q2 2026</div>
         <div class="access-method">ArcGIS Hub + Live Page</div>
       </div>
     </div>
@@ -941,12 +894,12 @@
       </div>
       <div class="coverage-meta">
         <div class="cadence cadence-soon">Q3 2026</div>
-        <div class="access-method">GeoHub / O. Reg. 73/23</div>
+        <div class="access-method">ArcGIS FeatureServer</div>
       </div>
     </div>
   </div>
   <p style="margin-top:16px;font-size:12px;color:var(--text-dimmer);font-family:'IBM Plex Mono',monospace;">
-    Ontario Regulation 73/23 legally requires all 29 major municipalities to publish standardized planning data publicly on a quarterly basis.
+    All data sourced directly from municipal open data portals and ArcGIS endpoints. No third-party aggregation.
   </p>
 </div>
 
@@ -1043,7 +996,7 @@
 <div class="section-inner">
   <div class="section-label">Early Access</div>
   <h2>Stop checking portals.<br>Start knowing first.</h2>
-  <p class="lead">Free beta. Toronto-first. I'll email you personally before your account goes live.</p>
+  <p class="lead">Free during beta. Toronto and York Region live. Set up your alerts in two minutes.</p>
   <div class="cta-form">
     <input type="email" placeholder="your@email.com" id="cta-email" />
     <button onclick="handleSignup('cta-email')">Request Beta Access</button>
@@ -1056,7 +1009,7 @@
 <footer>
 <div style="max-width:1100px;margin:0 auto;width:100%;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
   <span>Lotline &nbsp;·&nbsp; Toronto, Ontario</span>
-  <span>Data: Toronto Open Data · York Region · City of Mississauga · O. Reg. 73/23</span>
+  <span>Data: Toronto Open Data · York Region · City of Mississauga · City of Brampton</span>
 </div>
 </footer>
 
