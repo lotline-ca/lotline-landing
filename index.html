@@ -604,7 +604,7 @@
   <div class="hero-inner">
     <div class="hero-left">
     <div class="hero-eyebrow fade-up">
-      <span class="live">●</span>&nbsp;Live data &nbsp;·&nbsp; Toronto + York Region
+      <span class="live">●</span>&nbsp;Live data &nbsp;·&nbsp; Toronto · Mississauga · Brampton · York Region
     </div>
     <h1 class="fade-up">
       The application filed<br>
@@ -618,10 +618,8 @@
       <input type="email" placeholder="your@email.com" id="hero-email" />
       <button onclick="handleSignup('hero-email')">Get Early Access</button>
     </div>
-    <p class="hero-note fade-up">Free during beta. No credit card. Covering Toronto + York Region.</p>
-    <p class="hero-note fade-up" style="margin-top:10px;color:var(--text-dim);">
-      <span style="color:var(--green);">●</span>&nbsp; <span id="waitlist-count">—</span> people on the waitlist
-    </p>
+    <p class="hero-note fade-up">Free during beta. No credit card. Covering Toronto, Mississauga, Brampton, and all of York Region.</p>
+
     </div>
     <div class="hero-right">
       <p class="hero-right-label">↓ Latest alerts in your inbox</p>
@@ -854,7 +852,7 @@
 <!-- COVERAGE -->
 <div style="margin-bottom:80px;">
   <div class="section-label">Data Coverage</div>
-  <h2>Toronto + all of York Region.<br>More coming.</h2>
+  <h2>12 municipalities live.<br>More coming.</h2>
   <p class="lead">Built directly on municipal APIs and ArcGIS endpoints — not third-party aggregators. The same data that appears on city portals, normalized and routed to you.</p>
   <div class="coverage-grid">
     <div class="coverage-card">
@@ -877,24 +875,34 @@
         <div class="access-method">ArcGIS FeatureServer</div>
       </div>
     </div>
-    <div class="coverage-card coming">
+    <div class="coverage-card">
       <div class="coverage-info">
         <h4>Mississauga</h4>
-        <div class="munis">Coming soon — all 11 wards</div>
+        <div class="munis">All 11 wards · Development applications</div>
       </div>
       <div class="coverage-meta">
-        <div class="cadence cadence-soon">Q2 2026</div>
-        <div class="access-method">ArcGIS Hub + Live Page</div>
+        <div class="cadence cadence-weekly">Weekly</div>
+        <div class="access-method">ArcGIS Hub</div>
+      </div>
+    </div>
+    <div class="coverage-card">
+      <div class="coverage-info">
+        <h4>Brampton</h4>
+        <div class="munis">Development applications</div>
+      </div>
+      <div class="coverage-meta">
+        <div class="cadence cadence-weekly">Weekly</div>
+        <div class="access-method">ArcGIS FeatureServer</div>
       </div>
     </div>
     <div class="coverage-card coming">
       <div class="coverage-info">
-        <h4>Brampton</h4>
-        <div class="munis">Coming soon — integration in progress</div>
+        <h4>Oakville</h4>
+        <div class="munis">Coming soon</div>
       </div>
       <div class="coverage-meta">
-        <div class="cadence cadence-soon">Q3 2026</div>
-        <div class="access-method">ArcGIS FeatureServer</div>
+        <div class="cadence cadence-soon">Q2 2026</div>
+        <div class="access-method">ArcGIS</div>
       </div>
     </div>
   </div>
@@ -964,7 +972,7 @@
         Where does the data come from? Is it accurate?
         <span class="arrow">+</span>
       </button>
-      <div class="faq-a">We pull directly from the source: Toronto's CKAN open data API (refreshed daily), York Region's ArcGIS FeatureServer (weekly), and Mississauga's planning portals. No third-party aggregation, no middlemen. The underlying data is published by city planning staff — the same data that appears on their public portals.</div>
+      <div class="faq-a">We pull directly from the source: Toronto's CKAN open data API (refreshed daily), York Region's ArcGIS FeatureServer (weekly), Mississauga's planning portals, and Brampton's ArcGIS endpoint. No third-party aggregation, no middlemen. The underlying data is published by city planning staff — the same data that appears on their public portals.</div>
     </div>
     <div class="faq-item">
       <button class="faq-q" onclick="toggleFaq(this)">
@@ -985,7 +993,7 @@
         What happens during beta?
         <span class="arrow">+</span>
       </button>
-      <div class="faq-a">Beta is free. We start with Toronto (our cleanest, daily-refreshed data source), with York Region, Mississauga, and Brampton following within 6–8 weeks. In exchange we ask for direct feedback — a short reply when you get your first alert telling us whether it was relevant. That feedback shapes what we build next. Beta users get 50% off their first paid year, and you'll hear from me personally before any billing starts.</div>
+      <div class="faq-a">Beta is free. We're live across Toronto, Mississauga, Brampton, and all of York Region — 12 municipalities, 98,000+ records. In exchange we ask for direct feedback — a short reply when you get your first alert telling us whether it was relevant. That feedback shapes what we build next. Beta users get 50% off their first paid year, and you'll hear from me personally before any billing starts.</div>
     </div>
   </div>
 </div>
@@ -996,7 +1004,7 @@
 <div class="section-inner">
   <div class="section-label">Early Access</div>
   <h2>Stop checking portals.<br>Start knowing first.</h2>
-  <p class="lead">Free during beta. Toronto and York Region live. Set up your alerts in two minutes.</p>
+  <p class="lead">Free during beta. Toronto, Mississauga, Brampton, and all of York Region live. Set up your alerts in two minutes.</p>
   <div class="cta-form">
     <input type="email" placeholder="your@email.com" id="cta-email" />
     <button onclick="handleSignup('cta-email')">Request Beta Access</button>
@@ -1021,17 +1029,7 @@
     if (!isOpen) item.classList.add('open');
   }
 
-  // Waitlist counter — replace with real API call once you have a backend
-  // e.g. fetch('/api/waitlist-count').then(r => r.json()).then(d => updateCount(d.count))
-  function updateCount(n) {
-    const el = document.getElementById('waitlist-count');
-    if (el && n > 0) el.textContent = n.toLocaleString();
-    else if (el) el.closest('p').style.display = 'none';
-  }
-  // During beta: set this manually or wire to your email capture backend
-  const WAITLIST_COUNT = 0; // set to real number once signups start
-  if (WAITLIST_COUNT > 0) updateCount(WAITLIST_COUNT);
-  else document.getElementById('waitlist-count')?.closest('p')?.style.setProperty('display','none');
+  // Waitlist counter removed
 
   async function handleSignup(inputId) {
     const input = document.getElementById(inputId);
